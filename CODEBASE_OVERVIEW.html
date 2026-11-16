@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real Estate Agency - Codebase Overview</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --badge-bg: #312e81;
+      --badge-text: #c7d2fe;
+      --dep-bg: #1e1b4b;
+      --dep-text: #a5b4fc;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11pt !important;
+      }
+      .card {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        color: #0f172a !important;
+      }
+      h1, h2, h3 { color: #0f172a !important; }
+      .badge, .dep-badge {
+        border: 1px solid #94a3b8 !important;
+        color: #0f172a !important;
+        background-color: #f1f5f9 !important;
+      }
+      .no-print { display: none !important; }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .print-btn:hover { background-color: var(--accent-light); }
+
+    .tech-stack {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .tech-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .tech-card h4 {
+      color: var(--accent-light);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .tech-card p {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .folder-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .badge {
+      background-color: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 0.25rem 0.6rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .sub-list {
+      margin-left: 1.25rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .sub-list li {
+      margin-bottom: 0.4rem;
+    }
+
+    .sub-list strong {
+      color: var(--text-main);
+    }
+
+    .deps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 640px) {
+      .deps-grid { grid-template-columns: 1fr; }
+    }
+
+    .dep-block h5 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-light);
+      margin-bottom: 0.4rem;
+    }
+
+    .dep-block p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .diagram {
+      background: #020617;
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.4;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Real Estate Agency Codebase Overview</h1>
+      <p class="subtitle">Complete Technical Architecture & Folder Dependency Mapping</p>
+      <button class="print-btn no-print" onclick="window.print()">
+        🖨️ Print / Save as PDF
+      </button>
+    </header>
+
+    <div class="tech-stack">
+      <div class="tech-card">
+        <h4>Framework</h4>
+        <p>Next.js 16 (App Router) & React 19</p>
+      </div>
+      <div class="tech-card">
+        <h4>Database & ORM</h4>
+        <p>PostgreSQL & Prisma 6</p>
+      </div>
+      <div class="tech-card">
+        <h4>Styling</h4>
+        <p>Tailwind CSS v4 & Framer Motion</p>
+      </div>
+      <div class="tech-card">
+        <h4>Authentication</h4>
+        <p>Jose (JWT) & Edge Middleware</p>
+      </div>
+    </div>
+
+    <h2 class="section-title">📂 Major Folders Overview</h2>
+
+    <!-- 1. prisma -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">prisma/</span>
+        <span class="badge">Database Layer</span>
+      </div>
+      <p class="card-desc">
+        Manages the relational database schema, database modeling, and migration history for PostgreSQL.
+      </p>
+      <ul class="sub-list">
+        <li><strong>schema.prisma:</strong> Defines 14 database models (User, Landlord, Property, Tenant, Lease, RentPayment, Contractor, Maintenance, RatesAndLevy, RatesAndLevyEntry, MoveRecord, PropertyDocument, Client, MaintenanceContact) and 8 domain Enums.</li>
+        <li><strong>migrations/:</strong> SQL scripts tracking database schema changes.</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p>PostgreSQL Database, <code>@prisma/client</code> package.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p><code>src/lib/prisma.ts</code>, all backend API routes (<code>src/app/api/</code>) & Server Actions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. src/app/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/app/</span>
+        <span class="badge">Pages, APIs & Server Actions</span>
+      </div>
+      <p class="card-desc">
+        Root of the Next.js App Router containing page components, RESTful API endpoints, server actions, and layout declarations.
+      </p>
+      <ul class="sub-list">
+        <li><strong>(agent)/:</strong> Authenticated agent portal containing <code>dashboard</code>, <code>properties</code>, <code>clients</code>, <code>maintenance</code>, <code>payments</code> views and shared <code>layout.tsx</code>.</li>
+        <li><strong>actions/ (auth.ts):</strong> Server actions for user login, signup, password hashing (<code>bcryptjs</code>), and JWT session creation.</li>
+        <li><strong>api/:</strong> 15 RESTful API routes providing backend CRUD endpoints for all application domain entities.</li>
+        <li><strong>register/ & page.tsx:</strong> User registration page and login/landing page.</li>
+        <li><strong>globals.css & layout.tsx:</strong> Global Tailwind styles and top-level HTML root wrapper.</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p><code>src/components/</code>, <code>src/lib/</code>, <code>src/schemas/</code>, <code>src/types/</code>, Lucide icons, Framer Motion.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>End-user web browser requests and external API callers.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. src/components/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/components/</span>
+        <span class="badge">UI Components Layer</span>
+      </div>
+      <p class="card-desc">
+        Contains modular React frontend UI components grouped by feature responsibility.
+      </p>
+      <ul class="sub-list">
+        <li><strong>agent/:</strong> Agent widgets and forms (<code>AgentHeader</code>, <code>AgentSidebar</code>, <code>KpiCard</code>, <code>RentChart</code>, <code>UrgentTickets</code>, <code>PropertyForm</code>, <code>ClientForm</code>, <code>MaintenanceForm</code>, <code>ThemeProvider</code>, <code>ThemeToggle</code>).</li>
+        <li><strong>shared/:</strong> Cross-cutting components (<code>Header</code>, <code>StatusBadge</code>, <code>EmptyState</code>, <code>MobileBottomNav</code>).</li>
+        <li><strong>auth/ & ui/:</strong> Directory hooks for authentication views and base UI primitives.</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p><code>lucide-react</code>, <code>framer-motion</code>, <code>react-hook-form</code>, <code>src/types/</code>, <code>src/schemas/</code>, <code>src/lib/utils.ts</code>.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>Page views inside <code>src/app/</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. src/lib/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/lib/</span>
+        <span class="badge">Core Utilities & Singletons</span>
+      </div>
+      <p class="card-desc">
+        Utility modules, singletons, session encryption, and class name merging logic.
+      </p>
+      <ul class="sub-list">
+        <li><strong>prisma.ts:</strong> Global singleton instance of <code>PrismaClient</code>.</li>
+        <li><strong>session.ts:</strong> JWT creation, cookie encryption/decryption, and session verification using <code>jose</code>.</li>
+        <li><strong>utils.ts:</strong> Class helper <code>cn()</code> joining Tailwind classes via <code>clsx</code> and <code>tailwind-merge</code>.</li>
+        <li><strong>validation.ts & constants.ts:</strong> Input validation utilities and system constants.</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p><code>@prisma/client</code>, <code>jose</code>, <code>clsx</code>, <code>tailwind-merge</code>.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>API routes in <code>src/app/api/</code>, Server Actions, Middleware, and UI Components.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. src/schemas/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/schemas/</span>
+        <span class="badge">Zod Schema Validation</span>
+      </div>
+      <p class="card-desc">
+        Runtime schema definitions ensuring strict data validation for forms and API requests.
+      </p>
+      <ul class="sub-list">
+        <li><strong>property.ts:</strong> Zod schema validating property fields (code, name, address, property type, status, landlord ID).</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p><code>zod</code> package.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p><code>PropertyForm.tsx</code> (Client validation) & <code>/api/property/route.ts</code> (Server validation).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. src/types/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/types/</span>
+        <span class="badge">TypeScript Types</span>
+      </div>
+      <p class="card-desc">
+        Central repository for shared TypeScript interfaces and domain object type definitions.
+      </p>
+      <ul class="sub-list">
+        <li><strong>property.ts:</strong> Type interfaces for Property, PropertyFormData, Tenant, Lease, Landlord, Maintenance.</li>
+      </ul>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p>Standard TypeScript.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>React components (<code>src/components/</code>), agent pages (<code>src/app/(agent)/</code>), API routes (<code>src/app/api/</code>).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. src/middleware.ts -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">src/middleware.ts</span>
+        <span class="badge">Edge Security Middleware</span>
+      </div>
+      <p class="card-desc">
+        Next.js Edge Middleware intercepting HTTP requests for route authentication and session validation.
+      </p>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p><code>next/server</code>, <code>jose</code> (<code>jwtVerify</code>).</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>Every incoming HTTP request lifecycle.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. public/ -->
+    <div class="card">
+      <div class="card-header">
+        <span class="folder-name">public/</span>
+        <span class="badge">Static Assets</span>
+      </div>
+      <p class="card-desc">
+        Public static assets served directly at domain root (favicons, logos, static images).
+      </p>
+      <div class="deps-grid">
+        <div class="dep-block">
+          <h5>Depends On</h5>
+          <p>None.</p>
+        </div>
+        <div class="dep-block">
+          <h5>Depended On By</h5>
+          <p>Next.js layout (<code>src/app/layout.tsx</code>) and HTML <code>&lt;img&gt;</code> tags.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">🔄 Application Architecture & Dependency Flow</h2>
+    <div class="diagram">
+[ Browser / User Request ]
+         │
+         ▼
+ ┌────────────────┐
+ │ middleware.ts  │ ◄── (Verifies JWT Session using src/lib/session.ts)
+ └───────┬────────┘
+         │
+         ▼
+ ┌────────────────┐
+ │   src/app/     │ ◄── (Renders UI using src/components/)
+ └───────┬────────┘
+         │
+         ├───► API Routes (src/app/api/) ──► Validates inputs with src/schemas/
+         │                                   Imports types from src/types/
+         │
+         ▼
+ ┌────────────────┐
+ │  src/lib/      │ ◄── (Provides singleton PrismaClient instance)
+ └───────┬────────┘
+         │
+         ▼
+ ┌────────────────┐
+ │    prisma/     │ ◄── (Connects to PostgreSQL Database)
+ └────────────────┘
+    </div>
+  </div>
+</body>
+</html>

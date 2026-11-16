@@ -1,0 +1,478 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  email        String   @unique
+  passwordHash String
+  updatedAt    DateTime @updatedAt
+  isActive     Boolean  @default(true)
+
+  role UserRole
+
+  createdAt DateTime @default(now())
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  ACCOUNTANT
+}
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
+
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  TOWNHOUSE
+  COMMERCIAL
+  OFFICE
+  LAND
+  OTHER
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  OCCUPIED
+  UNDER_MAINTENANCE
+  INACTIVE
+}
+
+enum TenantStatus {
+  ACTIVE
+  PREVIOUS
+}
+
+enum LeaseStatus {
+  ACTIVE
+  EXPIRED
+  CRITICAL
+  EXPIRING_SOON
+  TERMINATED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  REPORTED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintenancePaymentStatus {
+  UNPAID
+  PAID
+}
+
+//////////////////////////////////////////////////////
+// LANDLORD
+//////////////////////////////////////////////////////
+
+model Landlord {
+  id Int @id @default(autoincrement())
+
+  displayName String
+
+  phoneNumber String?
+  email       String? @unique
+
+  commissionRate Decimal? @db.Decimal(5, 2)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties Property[]
+}
+
+//////////////////////////////////////////////////////
+// PROPERTY
+//////////////////////////////////////////////////////
+
+model Property {
+  id Int @id @default(autoincrement())
+
+  /// Business ID visible to users
+  propertyCode String @unique
+  propertyName String
+
+  address String
+
+  suburb     String?
+  city       String?
+  province   String?
+  postalCode String?
+  price      Decimal?
+
+  propertyType PropertyType @default(OTHER)
+
+  status PropertyStatus @default(AVAILABLE)
+
+  managingAgent String?
+
+  notes String?
+
+  landlordId Int?
+
+  landlord Landlord? @relation(fields: [landlordId], references: [id])
+
+  parentPropertyId Int?
+  parentProperty   Property? @relation("PropertyHierarchy", fields: [parentPropertyId], references: [id])
+
+  childProperties Property[] @relation("PropertyHierarchy")
+
+  tenants Tenant[]
+
+  leases Lease[]
+
+  maintenanceJobs Maintenance[]
+
+  ratesAccounts RatesAndLevy[]
+
+  moveRecords MoveRecord[]
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  propertyDocuments PropertyDocument[]
+
+  @@index([landlordId])
+  @@index([parentPropertyId])
+}
+
+//////////////////////////////////////////////////////
+// TENANT
+//////////////////////////////////////////////////////
+
+model Tenant {
+  id Int @id @default(autoincrement())
+
+  firstName String
+  lastName  String
+
+  phoneNumber String?
+  email       String? @unique
+
+  status TenantStatus
+
+  notes String?
+
+  propertyId Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  leases Lease[]
+
+  moveRecords MoveRecord[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  maintenances Maintenance[]
+
+  @@index([propertyId])
+}
+
+//////////////////////////////////////////////////////
+// LEASE
+//////////////////////////////////////////////////////
+
+model Lease {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+  tenantId   Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime
+
+  monthlyRent Decimal @db.Decimal(12, 2)
+
+  depositHeld Decimal? @db.Decimal(12, 2)
+
+  status LeaseStatus
+
+  rentPayments RentPayment[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  renewalDate DateTime?
+
+  leaseReference String?
+
+  @@index([propertyId])
+  @@index([tenantId])
+}
+
+//////////////////////////////////////////////////////
+// RENT PAYMENTS
+//////////////////////////////////////////////////////
+
+model RentPayment {
+  id Int @id @default(autoincrement())
+
+  leaseId Int
+
+  lease Lease @relation(fields: [leaseId], references: [id])
+
+  month Int
+
+  year Int
+
+  amountDue Decimal @db.Decimal(12, 2)
+
+  amountPaid Decimal? @db.Decimal(12, 2)
+
+  paymentDate DateTime?
+
+  status PaymentStatus
+
+  notes String?
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([leaseId, month, year])
+  @@index([leaseId])
+}
+
+//////////////////////////////////////////////////////
+// CONTRACTOR
+//////////////////////////////////////////////////////
+
+model Contractor {
+  id Int @id @default(autoincrement())
+
+  contractorName String
+
+  speciality String?
+
+  description String?
+
+  beneficiaryNumber String?
+
+  phoneNumber String?
+
+  email String?
+
+  notes String?
+
+  maintenanceJobs Maintenance[]
+
+  updatedAt DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// MAINTENANCE
+//////////////////////////////////////////////////////
+
+model Maintenance {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  contractorId Int?
+
+  contractor Contractor? @relation(fields: [contractorId], references: [id])
+
+  tenantId Int?
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  issueDescription String
+
+  priority MaintenancePriority
+
+  status MaintenanceStatus
+
+  reportedDate DateTime
+
+  invoiceDate DateTime?
+
+  paymentDate DateTime?
+
+  cost Decimal? @db.Decimal(12, 2)
+
+  paymentStatus MaintenancePaymentStatus? @default(UNPAID)
+
+  notes String?
+
+  updatedAt DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([contractorId])
+}
+
+//////////////////////////////////////////////////////
+// RATES & LEVIES
+//////////////////////////////////////////////////////
+
+model RatesAndLevy {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  accountName String
+
+  accountNumber String?
+
+  notes String?
+
+  entries RatesAndLevyEntry[]
+
+  updatedAt DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model RatesAndLevyEntry {
+  id Int @id @default(autoincrement())
+
+  ratesAndLevyId Int
+
+  ratesAndLevy RatesAndLevy @relation(fields: [ratesAndLevyId], references: [id])
+
+  month Int
+
+  year Int
+
+  amount Decimal @db.Decimal(12, 2)
+
+  dueDate DateTime?
+
+  paid Boolean @default(false)
+
+  paidDate DateTime?
+
+  updatedAt DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+
+  @@unique([ratesAndLevyId, month, year])
+  @@index([ratesAndLevyId])
+}
+
+//////////////////////////////////////////////////////
+// MOVE RECORDS
+//////////////////////////////////////////////////////
+
+model MoveRecord {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+
+  tenantId Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  moveInDate DateTime?
+
+  moveOutDate DateTime?
+
+  notes String?
+
+  updatedAt DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([tenantId])
+}
+
+//////////////////////////////////////////////////////
+// PROPERTY DOCUMENTS
+//////////////////////////////////////////////////////
+
+model PropertyDocument {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+
+  property Property @relation(fields: [propertyId], references: [id])
+
+  fileName String
+
+  fileUrl String
+
+  documentType String
+
+  uploadedAt DateTime @default(now())
+
+  @@map("PropertDocument")
+}
+
+//////////////////////////////////////////////////////
+// CLIENT
+//////////////////////////////////////////////////////
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String
+  phone        String
+  address      String?
+  status       String   @default("Lead")
+  budget       String?
+  propertyType String?  @default("House")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// MAINTENANCE CONTACT
+//////////////////////////////////////////////////////
+
+model MaintenanceContact {
+  id          Int      @id @default(autoincrement())
+  name        String
+  serviceType String
+  phone       String
+  email       String?
+  rating      String?  @default("5.0")
+  status      String   @default("Available")
+  address     String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
